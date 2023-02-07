@@ -26,9 +26,7 @@ It's a multiple language support linebot for meme search.
 
 #### -
 
-![](https://i.imgur.com/v040EOS.png)
-![](https://i.imgur.com/3hWfEqI.png)
-![](https://i.imgur.com/QJAMls2.png)
+![](https://cdn-images-1.medium.com/max/1600/1*FRiF282xTKHgKST76lfPWw.png)
 
 ✨ 免責聲明
 所有圖檔皆由 API 回傳，無法保證是否正確/合法，大家使用上要小心注意，有任何疑慮請停止使用。
