@@ -33,65 +33,31 @@ async def echoBot(request: Request):
 
 @handler.add(MessageEvent, message=(TextMessage))
 def handling_message(event):
-    replyToken = event.reply_token
-    
+
     if isinstance(event.message, TextMessage):
-        if "動態" in event.message.text or 'mp4'in event.message.text: 
-            if event.message.text=='隨機' or event.message.text=='random':
+        if event.message.text=='隨機' or event.message.text=='random':
                 line_bot_api.reply_message(event.reply_token, VideoSendMessage(original_content_url=getRandom(), preview_image_url=getRandom()))
-            elif event.message.text=='熱門' or event.message.text=='popular':
-                data = []
-                for i in getTrend():
-                    data.append(VideoSendMessage(
-                        original_content_url=i,
-                        preview_image_url=i,
-                    ))
-                line_bot_api.reply_message(event.reply_token, data)
-            else:
-                try:
-                    data = []
-                    for i in getSearch(event.message.text):
-                        data.append(VideoSendMessage(
-                        original_content_url=i,
-                        preview_image_url=i,
-                    ))
-                    line_bot_api.reply_message(event.reply_token, data)            
-                except LineBotApiError as e:
-                    errorText=f"找不到與 {event.message.text} 有關的迷因圖片"
-                    line_bot_api.reply_message(event.reply_token,TextSendMessage(text=errorText))
-
+        elif event.message.text=='熱門' or event.message.text=='popular':
+            data = []
+            for i in getTrend():
+                data.append(VideoSendMessage(
+                    original_content_url=i,
+                    preview_image_url=i,
+                ))
+            line_bot_api.reply_message(event.reply_token, data)
         else:
-            if event.message.text=='隨機' or event.message.text=='random':            
-                line_bot_api.reply_message(event.reply_token, ImageSendMessage(
-                original_content_url=getRandom(),
-                preview_image_url=getRandom()))
-            elif event.message.text=='熱門' or event.message.text=='popular':
+            try:
                 data = []
-                for i in getTrend():
-                    data.append(ImageSendMessage(
-                        original_content_url=i,
-                        preview_image_url=i,
-                    ))
-                line_bot_api.reply_message(event.reply_token, data)
-            else:
-                try:
-                    data = []
-                    for i in getSearch(event.message.text):
-                            data.append(ImageSendMessage(
-                                original_content_url=i,
-                                preview_image_url=i,
-                    ))
-                    line_bot_api.reply_message(event.reply_token, data)            
-                except LineBotApiError as e:
-                    errorText=f"找不到與 {event.message.text} 有關的迷因圖片"
-                    line_bot_api.reply_message(event.reply_token,TextSendMessage(text=errorText))
+                for i in getSearch(event.message.text):
+                    data.append(VideoSendMessage(
+                    original_content_url=i,
+                    preview_image_url=i,
+                ))
+                line_bot_api.reply_message(event.reply_token, data)            
+            except LineBotApiError as e:
+                errorText=f"找不到與 {event.message.text} 有關的迷因圖片"
+                line_bot_api.reply_message(event.reply_token,TextSendMessage(text=errorText))
 
-                
-            messages = event.message.text
-            
-            echoMessages = TextSendMessage(text=messages)
-            line_bot_api.reply_message(reply_token=replyToken, messages=echoMessages)
-        
         
         
         
