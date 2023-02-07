@@ -36,11 +36,11 @@ def handling_message(event):
 
     if isinstance(event.message, TextMessage):
         if event.message.text=='隨機' or event.message.text=='random':
-                line_bot_api.reply_message(event.reply_token, VideoSendMessage(original_content_url=getRandom(), preview_image_url=getRandom()))
+                line_bot_api.reply_message(event.reply_token, ImageSendMessage(original_content_url=getRandom(), preview_image_url=getRandom()))
         elif event.message.text=='熱門' or event.message.text=='popular':
             data = []
             for i in getTrend():
-                data.append(VideoSendMessage(
+                data.append(ImageSendMessage(
                     original_content_url=i,
                     preview_image_url=i,
                 ))
@@ -49,7 +49,7 @@ def handling_message(event):
             try:
                 data = []
                 for i in getSearch(event.message.text):
-                    data.append(VideoSendMessage(
+                    data.append(ImageSendMessage(
                     original_content_url=i,
                     preview_image_url=i,
                 ))
