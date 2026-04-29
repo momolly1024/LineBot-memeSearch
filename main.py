@@ -21,6 +21,8 @@ api_key = os.getenv("GiphyAPI_Key")
 
 app = FastAPI()
 
+MIN_FRAMES = 15
+
 
 @app.post("/")
 async def echoBot(request: Request):
@@ -76,43 +78,41 @@ def handling_message(event):
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(text=errorText))
 
 
+def _extract(gif):
+    return {
+        'url': gif["images"]["original"]["url"],
+        'mp4': gif["images"]["original"]["mp4"],
+        'still': gif["images"]["original_still"]["url"]
+    }
+
+
+def _long_enough(gif):
+    return int(gif["images"]["original"].get("frames", 0)) >= MIN_FRAMES
+
+
 def getSearch(keyWord):
-    response = requests.get(f"https://api.giphy.com/v1/gifs/search?api_key={api_key}&q={keyWord}&limit=3")
+    response = requests.get(f"https://api.giphy.com/v1/gifs/search?api_key={api_key}&q={keyWord}&limit=10")
     if response.status_code == 200:
         gifs = response.json()["data"]
-        return [
-            {
-                'url': gif["images"]["original"]["url"],
-                'mp4': gif["images"]["original"]["mp4"],
-                'still': gif["images"]["original_still"]["url"]
-            }
-            for gif in gifs
-        ]
+        results = [_extract(g) for g in gifs if _long_enough(g)]
+        return results[:3]
     return []
 
 
 def getTrend():
-    response = requests.get(f"https://api.giphy.com/v1/gifs/trending?api_key={api_key}&limit=3")
+    response = requests.get(f"https://api.giphy.com/v1/gifs/trending?api_key={api_key}&limit=10")
     if response.status_code == 200:
         gifs = response.json()["data"]
-        return [
-            {
-                'url': gif["images"]["original"]["url"],
-                'mp4': gif["images"]["original"]["mp4"],
-                'still': gif["images"]["original_still"]["url"]
-            }
-            for gif in gifs
-        ]
+        results = [_extract(g) for g in gifs if _long_enough(g)]
+        return results[:3]
     return []
 
 
 def getRandom():
-    response = requests.get(f"https://api.giphy.com/v1/gifs/random?api_key={api_key}&tag=meme")
-    if response.status_code == 200:
-        gif = response.json()['data']
-        return {
-            'url': gif["images"]["original"]["url"],
-            'mp4': gif["images"]["original"]["mp4"],
-            'still': gif["images"]["original_still"]["url"]
-        }
+    for _ in range(3):
+        response = requests.get(f"https://api.giphy.com/v1/gifs/random?api_key={api_key}&tag=meme")
+        if response.status_code == 200:
+            gif = response.json()['data']
+            if _long_enough(gif):
+                return _extract(gif)
     return None
