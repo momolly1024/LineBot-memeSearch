@@ -36,7 +36,8 @@ def handling_message(event):
 
     if isinstance(event.message, TextMessage):
         if event.message.text=='隨機' or event.message.text=='random':
-                line_bot_api.reply_message(event.reply_token, ImageSendMessage(original_content_url=getRandom(), preview_image_url=getRandom()))
+                url = getRandom()
+                line_bot_api.reply_message(event.reply_token, ImageSendMessage(original_content_url=url, preview_image_url=url))
         elif event.message.text=='熱門' or event.message.text=='popular':
             data = []
             for i in getTrend():
