@@ -10,6 +10,7 @@ from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, VideoSendMessage, ImageSendMessage
 )
 import json
+import random
 import requests
 import os
 from dotenv import load_dotenv
@@ -91,7 +92,8 @@ def _long_enough(gif):
 
 
 def getSearch(keyWord):
-    response = requests.get(f"https://api.giphy.com/v1/gifs/search?api_key={api_key}&q={keyWord}&limit=10")
+    offset = random.randint(0, 25)
+    response = requests.get(f"https://api.giphy.com/v1/gifs/search?api_key={api_key}&q={keyWord}&limit=10&offset={offset}")
     if response.status_code == 200:
         gifs = response.json()["data"]
         results = [_extract(g) for g in gifs if _long_enough(g)]
@@ -100,7 +102,8 @@ def getSearch(keyWord):
 
 
 def getTrend():
-    response = requests.get(f"https://api.giphy.com/v1/gifs/trending?api_key={api_key}&limit=10")
+    offset = random.randint(0, 25)
+    response = requests.get(f"https://api.giphy.com/v1/gifs/trending?api_key={api_key}&limit=10&offset={offset}")
     if response.status_code == 200:
         gifs = response.json()["data"]
         results = [_extract(g) for g in gifs if _long_enough(g)]
