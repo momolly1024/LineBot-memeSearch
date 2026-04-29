@@ -4,6 +4,8 @@ It's a multiple language support linebot for meme search.
 
 ### LineID：@740tlgkt
 
+<img width="510" height="304" alt="image" src="https://github.com/user-attachments/assets/1f1e96ff-efaa-4b6a-a678-704ba0026c65" />
+
 -   Enter a keyword to search and will receive 3 related images.(JPG)
 -   Enter the word「popular」，will receive 3 latest popular images.
 -   Enter the word「random」，will receive a random image.
