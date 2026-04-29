@@ -4,10 +4,10 @@ from linebot import (
     LineBotApi, WebhookHandler
 )
 from linebot.exceptions import (
-    InvalidSignatureError,LineBotApiError
+    InvalidSignatureError, LineBotApiError
 )
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage,VideoSendMessage,ImageSendMessage
+    MessageEvent, TextMessage, TextSendMessage, VideoSendMessage, ImageSendMessage
 )
 import json
 import requests
@@ -20,7 +20,8 @@ handler = WebhookHandler(os.getenv("Channel_secret"))
 api_key = os.getenv("GiphyAPI_Key")
 
 app = FastAPI()
- 
+
+
 @app.post("/")
 async def echoBot(request: Request):
     signature = request.headers["X-Line-Signature"]
@@ -31,83 +32,87 @@ async def echoBot(request: Request):
         raise HTTPException(status_code=400, detail="Missing Parameters")
     return "OK"
 
+
 @handler.add(MessageEvent, message=(TextMessage))
 def handling_message(event):
-
     if isinstance(event.message, TextMessage):
-        if event.message.text=='隨機' or event.message.text=='random':
-                url = getRandom()
-                line_bot_api.reply_message(event.reply_token, ImageSendMessage(original_content_url=url, preview_image_url=url))
-        elif event.message.text=='熱門' or event.message.text=='popular':
-            data = []
-            for i in getTrend():
-                data.append(ImageSendMessage(
-                    original_content_url=i,
-                    preview_image_url=i,
-                ))
+        text = event.message.text
+        want_video = 'gif' in text.lower()
+        clean_text = text.lower().replace('gif', '').strip()
+
+        if clean_text in ['隨機', 'random']:
+            result = getRandom()
+            if want_video:
+                msg = VideoSendMessage(
+                    original_content_url=result['mp4'],
+                    preview_image_url=result['still']
+                )
+            else:
+                msg = ImageSendMessage(
+                    original_content_url=result['url'],
+                    preview_image_url=result['url']
+                )
+            line_bot_api.reply_message(event.reply_token, msg)
+
+        elif clean_text in ['熱門', 'popular']:
+            results = getTrend()
+            if want_video:
+                data = [VideoSendMessage(original_content_url=r['mp4'], preview_image_url=r['still']) for r in results]
+            else:
+                data = [ImageSendMessage(original_content_url=r['url'], preview_image_url=r['url']) for r in results]
             line_bot_api.reply_message(event.reply_token, data)
+
         else:
+            keyword = text.replace('gif', '').replace('GIF', '').strip()
             try:
-                data = []
-                for i in getSearch(event.message.text):
-                    data.append(ImageSendMessage(
-                    original_content_url=i,
-                    preview_image_url=i,
-                ))
-                line_bot_api.reply_message(event.reply_token, data)            
-            except LineBotApiError as e:
-                errorText=f"找不到與 {event.message.text} 有關的迷因圖片"
-                line_bot_api.reply_message(event.reply_token,TextSendMessage(text=errorText))
+                results = getSearch(keyword)
+                if want_video:
+                    data = [VideoSendMessage(original_content_url=r['mp4'], preview_image_url=r['still']) for r in results]
+                else:
+                    data = [ImageSendMessage(original_content_url=r['url'], preview_image_url=r['url']) for r in results]
+                line_bot_api.reply_message(event.reply_token, data)
+            except LineBotApiError:
+                errorText = f"找不到與 {keyword} 有關的迷因圖片"
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=errorText))
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
 def getSearch(keyWord):
-    
     response = requests.get(f"https://api.giphy.com/v1/gifs/search?api_key={api_key}&q={keyWord}&limit=3")
-    res=[]
-    
     if response.status_code == 200:
-        data = response.json()
-        gifs = data["data"]
-        for i, gif in enumerate(gifs):
-            gif_url = gif["images"]["original"]["url"]
-            res.append(gif_url)
-        return res     
-    else:
-        print("Search request failed with status code ", response.status_code)
+        gifs = response.json()["data"]
+        return [
+            {
+                'url': gif["images"]["original"]["url"],
+                'mp4': gif["images"]["original"]["mp4"],
+                'still': gif["images"]["original_still"]["url"]
+            }
+            for gif in gifs
+        ]
+    return []
 
 
-
-# 熱門前10張
 def getTrend():
-    url = f"https://api.giphy.com/v1/gifs/trending?api_key={api_key}&limit=3"
-    response = requests.get(url)
-    res=[]  
+    response = requests.get(f"https://api.giphy.com/v1/gifs/trending?api_key={api_key}&limit=3")
     if response.status_code == 200:
-        data = json.loads(response.content.decode("utf-8"))
-        gifs = data["data"]
-        for i, gif in enumerate(gifs):
-            gif_url = gif["images"]["original"]["url"]
-            res.append(gif_url)
-        return res  
-    else:
-        print("Something went wrong")
+        gifs = response.json()["data"]
+        return [
+            {
+                'url': gif["images"]["original"]["url"],
+                'mp4': gif["images"]["original"]["mp4"],
+                'still': gif["images"]["original_still"]["url"]
+            }
+            for gif in gifs
+        ]
+    return []
 
 
-# 隨機一張
 def getRandom():
-    response = requests.get(f"http://api.giphy.com/v1/gifs/random?api_key={api_key}&tag=meme")
+    response = requests.get(f"https://api.giphy.com/v1/gifs/random?api_key={api_key}&tag=meme")
     if response.status_code == 200:
-        gifs = response.json()['data']
-        return gifs["images"]["original"]["url"]
-
-
+        gif = response.json()['data']
+        return {
+            'url': gif["images"]["original"]["url"],
+            'mp4': gif["images"]["original"]["mp4"],
+            'still': gif["images"]["original_still"]["url"]
+        }
+    return None
